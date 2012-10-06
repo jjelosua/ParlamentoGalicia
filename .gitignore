@@ -1,0 +1,8 @@
+# Ignore all logfiles and tempfiles.
+/logs
+/pdfs
+/txt
+/serialized_txt
+/conversations
+/cleanConv
+/catConv
