@@ -8,20 +8,20 @@ Description
 
 In order to extract the information the following steps are needed executed in the same order.
 
-1.- execute scrapePdfs 
-(downloads the pdf files from the Galician parlament web site to a local folder ../pdfs/)
-2.- execute convertPdfTxt 
-(converts the pdf files to text imitating the layout of the original file output folder ../txt **)
-3.- execute serializeMultipleColumn 
-(serialize the two column pages of the text file obtained in the previous step ../serialized_txt)
-4.- execute restoreLines
-(restore lines to the full size without wraping ../restored_txt)
-5.- execute extractConversations 
-(loop through the text files from previous step and extract the conversations found ../conversations)
-6.- execute cleanUpConversations 
-(clean up the exceptions found on the files from the previous step ../cleanConv)
-7.- execute crossCheckConversations 
-(makes a log file with possible uncaptured conversations  ../logs (Review this manually to achieve 100% accuracy))
+1.- execute scrapePdfs - (downloads the pdf files from the Galician parlament web site to a local folder ../pdfs/)
+
+2.- execute convertPdfTxt - (converts the pdf files to text imitating the layout of the original file output folder ../txt **)
+
+3.- execute serializeMultipleColumn - (serialize the two column pages of the text file obtained in the previous step ../serialized_txt)
+
+4.- execute restoreLines - (restore lines to the full size without wraping ../restored_txt)
+
+5.- execute extractConversations - (loop through the text files from previous step and extract the conversations found ../conversations)
+
+6.- execute cleanUpConversations - (clean up the exceptions found on the files from the previous step ../cleanConv)
+
+7.- execute crossCheckConversations (makes a log file with possible uncaptured conversations  ../logs (Review this manually to achieve 100% accuracy))
+
 
 
 **Note: Only the text selectable part of the pdfs will be extracted, so older sessions that are scanned images will be ignored.
@@ -59,4 +59,4 @@ Please see ``AUTHORS`` file for more information about the authors.
 [1]: http://www.parlamentodegalicia.es/sitios/web/ContenidoGal/Procuras/Boletins.aspx
 [2]: http://www.foolabs.com/xpdf/home.html
 [3]: http://www.apache.org/licenses/
-[4]: https://github.com/jjelosua/espanaenllamas.es/issues
+[4]: https://github.com/jjelosua/ParlamentoGalicia/issues
