@@ -1,43 +1,58 @@
 # encoding: utf-8
-
-# Extract all text from a single PDF
 require 'fileutils'
 
-TXT_DOCS_SUBDIR = '../txt/legislatura'
-PARSE_TXT_DOCS_SUBDIR = '../serialized_txt/legislatura'
+LOG_SUBDIR = '../logs'
+INPUT_FILES_SUBDIR = '../txt/legislatura'
+OUTPUT_FILES_SUBDIR = '../serialized_txt/legislatura'
+DATES_FILES_SUBDIR = '../dates/legislatura'
+FileUtils.makedirs(LOG_SUBDIR)
 
-for legis in 1..8
-  txtdir = "#{TXT_DOCS_SUBDIR}#{legis}"
-  ptxtdir = "#{PARSE_TXT_DOCS_SUBDIR}#{legis}"
-  FileUtils.makedirs(ptxtdir)
-  Dir.entries(txtdir).select{|f| f.match(/.*.txt/)}.each do |doc|
-    serialized_file = File.open("#{ptxtdir}/#{doc.gsub(/_layout\.txt/i, '')}_serialized.txt", 'w')
-    orig_text = File.open("#{txtdir}/#{doc}").readlines[0..-1]
+$log_file = File.open("#{LOG_SUBDIR}/serializeMultipleColumn.log", 'w')
+#Loop through all the available legistative periods 
+for legis in 4..8
+  inputDir = "#{INPUT_FILES_SUBDIR}#{legis}"
+  outputDir = "#{OUTPUT_FILES_SUBDIR}#{legis}"
+  FileUtils.makedirs(outputDir)
+  datesDir = "#{DATES_FILES_SUBDIR}#{legis}"
+  FileUtils.makedirs(datesDir)
+  dates_file = File.open("#{datesDir}/dates.csv", 'w')
+  Dir.entries(inputDir).select{|f| f.match(/.*\.txt/)}.each do |doc|
+    output_file = File.open("#{outputDir}/#{doc.gsub(/_layout\.txt/, '')}_serialized.txt", 'w')
+    input_file = File.open("#{inputDir}/#{doc}").readlines[0..-1]
+    
     new_page = true
     page_number = 0
     new_page_line = 0
     two_column_page = false
     second_column_lines_list = []
-    orig_text.each_with_index do |line, line_number|
-      #Skip the first three lines after the each new page
-      if (new_page && line_number < new_page_line+3) 
+    input_file.each_with_index do |line, line_number|
+      #Skip the first two lines after each new page
+      if (new_page && line_number < new_page_line+2) 
         next
-      end  
+      end 
       
-      #If we are reading a new_page marker update the indicators and go to the next iteration
-      if (line.strip == "(NEW_PAGE)")
+      #Write the date of the session to a auxiliary date_file. Only search on the first page
+      if (page_number == 0)
+        #get the date from the first line of the document
+        line.strip.match(/([0-9]{1,2} de [A-Za-zÁÉÍÓÚÑáéíóúñ]+ de [0-9]{4})/) {|m| dates_file.write("#{doc.gsub(/_layout\.txt/, '')},#{m[0]}\n")}
+      end
+      
+      #If we are reading a new_page marker update the indicators
+      #empty the second serialization part buffer if it exists
+      #and go to the next iteration
+      if (line.match(/^\f/))
+        #puts "new page detected"
         #If we have passed through a two column page then we need to write the second column buffer
         #to the output before starting with a new page.
         if (two_column_page)
-          serialized_file.write("\n[SEGUNDA_COLUMNA]\n")
-          #puts "La lista de la segunda columna tiene #{second_column_lines_list.length} lineas"
+          #output_file.write("\n[SECOND_COLUMN]\n")
           second_column_lines_list.each do |aux_line|
-          serialized_file.write("#{aux_line}\n")
+          output_file.write("#{aux_line}\n")
           end
           second_column_lines_list.clear
         end
         page_number += 1;
-        serialized_file.write("\n[PÁGINA #{page_number}]\n")
+        #output_file.write("\n[PAGE #{page_number}]\n")
         new_page = true
         new_page_line = line_number
         two_column_page = false
@@ -47,31 +62,36 @@ for legis in 1..8
       #Get the columns in this line
       columns = line.strip.split(/ {2,}/).map{|col| col.strip}
       
-      #If the page is a two column page:
-      # -If we have two columns on the line write the first column to the output
-      #  and save the second column in a buffer until we have reached the new_page mark
-      # -If we have only one column and starts in an index less than 50 then we assume 
-      #  that this is a first column line and we write to the output
-      # -If we have only one column and starts in an index more than 50 chars away from the 
-      #  begining of the line then we assume it is a second column line and we save the line 
-      #  to the buffer writing a newline to the output to maintain the structure.
-      if (columns.length == 2)
-        serialized_file.write("#{columns[0]}\n")
-        second_column_lines_list.push(columns[1])
-        two_column_page = true
-      elsif (columns.length == 1)
-        if (line.index(columns[0]) >= 49)
-          two_column_page = true
-          second_column_lines_list.push(columns[0])
-        else
-          serialized_file.write("#{columns[0]}\n")
+      if (columns.length > 0)
+        #Heading of the page on the document we can skip this lines
+        if (columns.length > 2) && columns[0].match(/^Número/)
+          next
         end
-      elsif (columns.length > 2)
-        next
+        
+        #We need to determine which of those columns correspond 
+        #to the first part of the serialization
+        #and which correspond to the second part
+        processed_excep = false
+        columns.each_with_index do |column, col_index|
+          if (line.index(column) >= 49)
+            output_file.write("#{columns[0..col_index-1].join(" ")}\n") if (col_index > 0)
+            two_column_page = true
+            second_column_lines_list.push(columns[col_index..columns.length].join(" "))
+            processed_excep = true
+            break
+          end
+        end
+        next if (processed_excep)   
+        #If we have not detected parts of the line in the second part of the serialization
+        # join together the columns and put them in the first part.
+        output_file.write("#{columns.join(" ")}\n")
+        if (columns.length > 2)
+          $log_file.puts("Line #{doc}/#{line_number+1}: more 2 columns first part serialization. #{columns.join(" ")}\n")
+        end
       else
-        serialized_file.write("#{line.strip}\n")
+        output_file.write(line)
       end
     end # each line
   end # each doc
-  puts "Procesados los documentos de la legislatura #{legis}"
+  puts "Legislative period #{legis}: processed"
 end #for legis
