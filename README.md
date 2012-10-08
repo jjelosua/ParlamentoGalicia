@@ -22,11 +22,9 @@ In order to extract the information the following steps are needed executed in t
 
 7.- execute crossCheckConversations (makes a log file with possible uncaptured conversations  ../logs (Review this manually to achieve 100% accuracy))
 
+Notes: A ../logs folder is created showing warnings or info messages about each step of the process.
 
-
-**Note: Only the text selectable part of the pdfs will be extracted, so older sessions that are scanned images will be ignored.
-
-**Note: A ../logs folder is created showing warnings or info messages about each step of the process.
+(**): Only the text selectable part of the pdfs will be extracted, so older sessions that are scanned images will be ignored.
 This process can be slow and there is no output on screen just on the ../logs folder...be patient my friend!!
 
 Requirements
