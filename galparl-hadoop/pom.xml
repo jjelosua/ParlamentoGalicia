@@ -61,7 +61,20 @@
             <version>1.0.2</version>
         </dependency>
 
-    </dependencies>
+        <!-- HBase -->
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase</artifactId>
+            <version>0.90.5</version> 
+        </dependency>
 
+        <!-- Apache Commons -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+
+    </dependencies>
 
 </project>
