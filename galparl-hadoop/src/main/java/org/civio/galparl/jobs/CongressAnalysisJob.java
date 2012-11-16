@@ -3,16 +3,23 @@ package org.civio.galparl.jobs;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
+import org.apache.hadoop.hbase.mapreduce.TableMapper;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
+import org.civio.galparl.utils.JobRunner;
 
 
 /**
@@ -22,26 +29,48 @@ import org.apache.hadoop.util.Tool;
 public class CongressAnalysisJob extends Configured implements Tool {
 
 	private static final String NAME = "CongressAnalysisJob";
-	private static final String DIR_IN = "src/main/resources/in";
-	private static final String DIR_OUT = "src/main/resources/out";
+	private static final String DIR_OUT = "output/";
 	
 	public static class MapClass extends
-			Mapper<Object, Text, Text, IntWritable> {
+			TableMapper<Text, IntWritable> {
 
 		private static final IntWritable ONE = new IntWritable(1);
 		private Text word = new Text();
-
+		
 		@Override
-		protected void map(Object key, Text value, Context context)
-				throws IOException, InterruptedException {
+		protected void map(ImmutableBytesWritable key, Result row,
+				Context context) throws IOException, InterruptedException {
+            
+            byte[] value = getColumnFamily(row, "body");       
+            if (value == null) {
+                return;
+            }
 
-			StringTokenizer tokenizer = new StringTokenizer(value.toString());
+            String delim = " .:";
+			StringTokenizer tokenizer = new StringTokenizer(Bytes.toString(value));
 			while (tokenizer.hasMoreTokens()) {
-				String token = tokenizer.nextToken();
+				String token = removeSpecialChars(tokenizer.nextToken());
 				word.set(token);
 				context.write(word, ONE);
 			}
+
 		}
+		
+		private String removeSpecialChars(String input) {
+			input = input.toLowerCase();
+			input = input.replaceAll("[^a-záéíóú]$", "").replaceAll("^[^a-záéíóú]", "");
+			input = input.replaceAll("[\\\"\\”\\-\\)\\!\\?]$|\\.{1,3}", "");
+			return input.replaceAll("^[\\\"\\”\\-\\)\\!\\?]", "");
+		}
+
+		private byte[] getColumnFamily(Result row, String prefix) {
+			return getColumnFamily(row, prefix, "");
+		}
+		
+		private byte[] getColumnFamily(Result row, String prefix, String qualifier) {
+            return row.getValue(Bytes.toBytes(prefix), Bytes.toBytes(qualifier));			
+		}
+		
 	}
 	
 	public static class Reduce extends
@@ -62,23 +91,37 @@ public class CongressAnalysisJob extends Configured implements Tool {
 		}
 	}
 	
-	@Override
-	public int run(String[] arg0) throws Exception {
-        Job job = new Job(getConf());
+    private static Job setupJob() throws IOException {
+        Configuration config = HBaseConfiguration.create();
+        Job job = new Job(config, CongressAnalysisJob.NAME);
         job.setJarByClass(CongressAnalysisJob.class);
-        job.setJobName(CongressAnalysisJob.NAME);
 
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        Scan scan = new Scan();
+        scan.setCaching(500);
+        scan.setCacheBlocks(false); // don't set to true for MR jobs
 
-        job.setMapperClass(MapClass.class);
-        job.setReducerClass(Reduce.class);
+        // Mapper
+        TableMapReduceUtil.initTableMapperJob(
+                "parlament-entries", // input HBase table name
+                scan, // Scan instance to control CF and attribute selection
+                CongressAnalysisJob.MapClass.class,
+                Text.class, IntWritable.class,
+                job);
 
-        FileInputFormat.setInputPaths(job, new Path(CongressAnalysisJob.DIR_IN));
+        job.setCombinerClass(CongressAnalysisJob.Reduce.class);
+        job.setReducerClass(CongressAnalysisJob.Reduce.class);
+
         FileOutputFormat.setOutputPath(job, new Path(CongressAnalysisJob.DIR_OUT));
 
-        boolean success = job.waitForCompletion(true);
-        return success ? 0 : 1;
-	}
+        return job;
+    }
 
+	@Override
+	public int run(String[] arg0) throws Exception {
+		if (JobRunner.run(setupJob())) {
+            System.out.println("Job completed!");
+        }
+		return 0;
+	}
+	
 }

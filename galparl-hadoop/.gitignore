@@ -1,3 +1,4 @@
 target/
 src/main/resources/out/
 data/*.txt
+output/

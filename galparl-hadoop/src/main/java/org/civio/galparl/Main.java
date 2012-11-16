@@ -10,9 +10,13 @@ import org.civio.galparl.jobs.CongressAnalysisJob;
  * Diego Pino García <dpino@igalia.com>
  *
  */
-class Main {
+public class Main {
 
 	private static final String DATA_DIR = "data";	
+	
+	public Main() {
+		
+	}
 	
     public static void main(String args[]) throws Exception {
     	if (ArrayUtils.contains(args, "--import")) {
