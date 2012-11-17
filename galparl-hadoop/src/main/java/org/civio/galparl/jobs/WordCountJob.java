@@ -19,6 +19,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
+import org.civio.galparl.utils.JobCommon;
 import org.civio.galparl.utils.JobRunner;
 
 
@@ -26,10 +27,10 @@ import org.civio.galparl.utils.JobRunner;
  * Diego Pino García <dpino@igalia.com>
  *
  */
-public class CongressAnalysisJob extends Configured implements Tool {
+public class WordCountJob extends Configured implements Tool {
 
-	private static final String NAME = "CongressAnalysisJob";
-	private static final String DIR_OUT = "output/";
+	private static final String NAME = "WordCountJob";
+	private static final String DIR_OUT = "output/wordcount";
 	
 	public static class MapClass extends
 			TableMapper<Text, IntWritable> {
@@ -41,36 +42,19 @@ public class CongressAnalysisJob extends Configured implements Tool {
 		protected void map(ImmutableBytesWritable key, Result row,
 				Context context) throws IOException, InterruptedException {
             
-            byte[] value = getColumnFamily(row, "body");       
-            if (value == null) {
-                return;
-            }
+			String body = Bytes
+					.toString(JobCommon.getColumnFamily(row, "body"));
 
-            String delim = " .:";
-			StringTokenizer tokenizer = new StringTokenizer(Bytes.toString(value));
+			StringTokenizer tokenizer = new StringTokenizer(body);
 			while (tokenizer.hasMoreTokens()) {
-				String token = removeSpecialChars(tokenizer.nextToken());
+				String token = JobCommon.removeSpecialChars(tokenizer
+						.nextToken());
 				word.set(token);
 				context.write(word, ONE);
 			}
 
 		}
-		
-		private String removeSpecialChars(String input) {
-			input = input.toLowerCase();
-			input = input.replaceAll("[^a-záéíóú]$", "").replaceAll("^[^a-záéíóú]", "");
-			input = input.replaceAll("[\\\"\\”\\-\\)\\!\\?]$|\\.{1,3}", "");
-			return input.replaceAll("^[\\\"\\”\\-\\)\\!\\?]", "");
-		}
-
-		private byte[] getColumnFamily(Result row, String prefix) {
-			return getColumnFamily(row, prefix, "");
-		}
-		
-		private byte[] getColumnFamily(Result row, String prefix, String qualifier) {
-            return row.getValue(Bytes.toBytes(prefix), Bytes.toBytes(qualifier));			
-		}
-		
+				
 	}
 	
 	public static class Reduce extends
@@ -93,8 +77,8 @@ public class CongressAnalysisJob extends Configured implements Tool {
 	
     private static Job setupJob() throws IOException {
         Configuration config = HBaseConfiguration.create();
-        Job job = new Job(config, CongressAnalysisJob.NAME);
-        job.setJarByClass(CongressAnalysisJob.class);
+        Job job = new Job(config, WordCountJob.NAME);
+        job.setJarByClass(WordCountJob.class);
 
         Scan scan = new Scan();
         scan.setCaching(500);
@@ -104,14 +88,14 @@ public class CongressAnalysisJob extends Configured implements Tool {
         TableMapReduceUtil.initTableMapperJob(
                 "parlament-entries", // input HBase table name
                 scan, // Scan instance to control CF and attribute selection
-                CongressAnalysisJob.MapClass.class,
+                WordCountJob.MapClass.class,
                 Text.class, IntWritable.class,
                 job);
 
-        job.setCombinerClass(CongressAnalysisJob.Reduce.class);
-        job.setReducerClass(CongressAnalysisJob.Reduce.class);
+        job.setCombinerClass(WordCountJob.Reduce.class);
+        job.setReducerClass(WordCountJob.Reduce.class);
 
-        FileOutputFormat.setOutputPath(job, new Path(CongressAnalysisJob.DIR_OUT));
+        FileOutputFormat.setOutputPath(job, new Path(WordCountJob.DIR_OUT));
 
         return job;
     }

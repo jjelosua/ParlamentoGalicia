@@ -3,7 +3,7 @@ package org.civio.galparl;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
-import org.civio.galparl.jobs.CongressAnalysisJob;
+import org.civio.galparl.jobs.WordCountJob;
 import org.civio.galparl.jobs.WordIndexJob;
 
 
@@ -20,11 +20,6 @@ public class Main {
 	}
 	
     public static void main(String args[]) throws Exception {
-    	int res = ToolRunner.run(new Configuration(),
-				new WordIndexJob(), args);
-		System.exit(res);
-    	
-    	/*
     	if (ArrayUtils.contains(args, "--import")) {
     		// Import data to HBase
 			Importer importer = Importer.create();
@@ -36,10 +31,9 @@ public class Main {
     	} else {
     		// Run Word Count job
 			int res = ToolRunner.run(new Configuration(),
-					new CongressAnalysisJob(), args);
+					new WordCountJob(), args);
 			System.exit(res);
     	}
-    	*/
     }
 
 }
