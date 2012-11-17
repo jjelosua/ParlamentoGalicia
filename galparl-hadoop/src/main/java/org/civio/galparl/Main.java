@@ -4,6 +4,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
 import org.civio.galparl.jobs.CongressAnalysisJob;
+import org.civio.galparl.jobs.WordIndexJob;
 
 
 /**
@@ -19,16 +20,26 @@ public class Main {
 	}
 	
     public static void main(String args[]) throws Exception {
+    	int res = ToolRunner.run(new Configuration(),
+				new WordIndexJob(), args);
+		System.exit(res);
+    	
+    	/*
     	if (ArrayUtils.contains(args, "--import")) {
     		// Import data to HBase
 			Importer importer = Importer.create();
 			importer.importAll(DATA_DIR);
+    	} else if (ArrayUtils.contains(args, "--build-index")) {
+			int res = ToolRunner.run(new Configuration(),
+					new WordIndexJob(), args);
+			System.exit(res);
     	} else {
-    		// Run Hadoop job
+    		// Run Word Count job
 			int res = ToolRunner.run(new Configuration(),
 					new CongressAnalysisJob(), args);
 			System.exit(res);
     	}
+    	*/
     }
 
 }
