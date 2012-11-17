@@ -409,6 +409,7 @@ texts = [
   {key:"aesop",file:"top_aesop.csv",name:"Aesop's Fables"}
   {key:"alice",file:"alice.csv",name:"Alice's Adventures in Wonderland"}
   {key:"gulliver",file:"top_gulliver.csv",name:"Gulliver's Travels"}
+  {key:"galparl",file:"gal_parl.csv",name:"Galician Parlament"}
 ]
 
 # ---
