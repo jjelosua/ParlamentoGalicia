@@ -26,22 +26,24 @@ import org.civio.galparl.utils.JobRunner;
 /**
  * Diego Pino García <dpino@igalia.com>
  *
+ * Counts number of words
  */
 public class WordCountJob extends Configured implements Tool {
 
 	private static final String NAME = "WordCountJob";
+	private static final String INPUT_TABLE = "parlament-entries";
 	private static final String DIR_OUT = "output/wordcount";
-	
+
 	public static class MapClass extends
 			TableMapper<Text, IntWritable> {
 
 		private static final IntWritable ONE = new IntWritable(1);
 		private Text word = new Text();
-		
+
 		@Override
 		protected void map(ImmutableBytesWritable key, Result row,
 				Context context) throws IOException, InterruptedException {
-            
+
 			String body = Bytes
 					.toString(JobCommon.getColumnFamily(row, "body"));
 
@@ -52,13 +54,11 @@ public class WordCountJob extends Configured implements Tool {
 				word.set(token);
 				context.write(word, ONE);
 			}
-
 		}
-				
 	}
-	
+
 	public static class Reduce extends
-			Reducer<Text, IntWritable, Text, IntWritable> {
+		Reducer<Text, IntWritable, Text, IntWritable> {
 
 		private IntWritable count = new IntWritable();
 
@@ -74,31 +74,30 @@ public class WordCountJob extends Configured implements Tool {
 			context.write(key, count);
 		}
 	}
-	
-    private static Job setupJob() throws IOException {
-        Configuration config = HBaseConfiguration.create();
-        Job job = new Job(config, WordCountJob.NAME);
-        job.setJarByClass(WordCountJob.class);
 
-        Scan scan = new Scan();
-        scan.setCaching(500);
-        scan.setCacheBlocks(false); // don't set to true for MR jobs
+	private static Job setupJob() throws IOException {
+		Configuration config = HBaseConfiguration.create();
+		Job job = new Job(config, WordCountJob.NAME);
+		job.setJarByClass(WordCountJob.class);
 
-        // Mapper
-        TableMapReduceUtil.initTableMapperJob(
-                "parlament-entries", // input HBase table name
-                scan, // Scan instance to control CF and attribute selection
-                WordCountJob.MapClass.class,
-                Text.class, IntWritable.class,
-                job);
+		Scan scan = new Scan();
+		scan.setCaching(500);
+		scan.setCacheBlocks(false);
 
-        job.setCombinerClass(WordCountJob.Reduce.class);
-        job.setReducerClass(WordCountJob.Reduce.class);
+		// Mapper
+		TableMapReduceUtil.initTableMapperJob(
+				INPUT_TABLE,
+				scan,
+				WordCountJob.MapClass.class,
+				Text.class,
+				IntWritable.class, job);
+		job.setCombinerClass(WordCountJob.Reduce.class);
+		job.setReducerClass(WordCountJob.Reduce.class);
 
-        FileOutputFormat.setOutputPath(job, new Path(WordCountJob.DIR_OUT));
+		FileOutputFormat.setOutputPath(job, new Path(WordCountJob.DIR_OUT));
 
-        return job;
-    }
+		return job;
+	}
 
 	@Override
 	public int run(String[] arg0) throws Exception {
@@ -107,5 +106,5 @@ public class WordCountJob extends Configured implements Tool {
         }
 		return 0;
 	}
-	
+
 }
