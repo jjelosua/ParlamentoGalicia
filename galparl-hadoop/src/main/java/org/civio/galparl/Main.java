@@ -1,6 +1,8 @@
 package org.civio.galparl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -48,12 +50,29 @@ public class Main {
 			importer.importAll(DATA_DIR);
 			return;
     	}
+    	// Export HBase table to MySQL
+    	if (arg.equals("--export")) {
+    		exportParlamentEntries();
+			return;
+    	}
     	// Execute job
     	JobCommand command = jobCommands.get(arg);
     	if (command != null) {
     		System.exit(command.execute());
     	}
     }
+    
+	private static void exportParlamentEntries() {
+		Exporter exporter = Exporter.create();		
+		final List<Attribute> attributes = new ArrayList<Attribute>() {{
+			add(new Attribute("integer", Record.NUM_ID));		
+			add(new Attribute("integer", Record.SEASON));		
+			add(new Attribute("long", Record.DATE));		
+			add(new Attribute("string", Record.PERSON));		
+			add(new Attribute("string", Record.BODY));		
+		}};		
+		exporter.exportTable("parlament-entries", attributes);
+	}
 
 }
 

@@ -7,9 +7,12 @@ public class JobCommon {
 
 	public static String removeSpecialChars(String input) {
 		input = input.toLowerCase();
-		input = input.replaceAll("[^a-záéíóú]$", "").replaceAll("^[^a-záéíóú]", "");
-		input = input.replaceAll("[\\\"\\”\\-\\)\\!\\?]$|\\.{1,3}", "");
-		return input.replaceAll("^[\\\"\\”\\-\\)\\!\\?]", "");
+		input = input.replaceAll("[^a-zA-Z0-9-%áéíóúñ]", "");
+		return replaceHyphenAtBeginning(input);
+	}
+
+	private static String replaceHyphenAtBeginning(String input) {
+		return input.replaceAll("^-", "");
 	}
 
 	public static byte[] getColumnFamily(Result row, String prefix) {

@@ -9,9 +9,13 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.MasterNotRunningException;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
@@ -85,6 +89,21 @@ public class HBaseHelper {
 					Bytes.toBytes(values.get(2)));
 			table.put(put);
 		}
+	}
+
+	public ResultScanner scan(HTable table, int limit) throws IOException {
+		Scan scan = new Scan();
+		scan.setBatch(limit);
+		return table.getScanner(scan);
+	}
+	
+	public ResultScanner scan(HTable table) throws IOException {
+		return table.getScanner(new Scan());
+	}
+	
+	public Result get(HTable table, String rowKey) throws IOException {
+		Get get = new Get(Bytes.toBytes(rowKey));
+		return table.get(get);
 	}
 
 	public void insert(HTable table, String rowKey, String prefix, String qualifier, Integer value)

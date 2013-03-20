@@ -21,6 +21,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
+import org.civio.galparl.Record;
 import org.civio.galparl.utils.JobCommon;
 import org.civio.galparl.utils.JobRunner;
 
@@ -48,15 +49,16 @@ public class WordIndexJob extends Configured implements Tool {
 				Context context) throws IOException, InterruptedException {
             
 			String body = Bytes
-					.toString(JobCommon.getColumnFamily(row, "body"));
-			String id = Bytes.toString(row.getRow());
+					.toString(JobCommon.getColumnFamily(row, Record.BODY));
+			int numId = Bytes.toInt(JobCommon.getColumnFamily(row,
+					Record.NUM_ID));
 
 			StringTokenizer tokenizer = new StringTokenizer(body);
 			while (tokenizer.hasMoreTokens()) {
 				String token = JobCommon.removeSpecialChars(tokenizer
 						.nextToken());
 				word.set(token);
-				context.write(word, new Text(id));
+				context.write(word, new Text(String.valueOf(numId)));
 			}
 
 		}
