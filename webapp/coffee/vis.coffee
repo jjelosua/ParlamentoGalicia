@@ -429,6 +429,7 @@ $ ->
   # we are storing the current text in the search component
   # just to make things easy
   key = decodeURIComponent(location.search).replace("?","")
+  key = key.replace("/","")
   text = texts.filter((t) -> t.key == key)[0]
 
   # default to the first text if something gets messed up
