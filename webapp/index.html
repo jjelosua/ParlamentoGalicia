@@ -24,7 +24,13 @@
 
 <body>
 
+
   <div id="container" class="container">
+
+      <div style="float: right">
+          <input id="word" type="text" size="32" style="padding: 3px" />
+      </div>
+
       <select id="text-select">
         <option value="sherlock">Sherlock Holmes</option>
         <option value="aesop">Aesop's Fables</option>
@@ -32,11 +38,13 @@
         <option value="gulliver">Gulliver's Travels</option>
         <option value="galparl">Galician Parlament</option>
       </select>
+
     <header>
     <h1>Bubble Cloud</h1>
     <h2>The most frequently used words in:</h2>
-      <h2 id="book-title"></h2>
+    <h2 id="book-title"></h2>
     </header>
+
     <div id="main" role="main">
       <div id="vis"></div>
       <div id="status"></div>

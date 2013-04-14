@@ -162,6 +162,10 @@ Bubbles = () ->
     updateNodes()
     updateLabels()
 
+  chart.update = () ->
+      data = data.slice(0, 15)
+      update()
+
   # ---
   # updateNodes creates a new bubble for each node in our dataset
   # ---
@@ -412,10 +416,14 @@ texts = [
   {key:"galparl",file:"gal_parl.csv",name:"Galician Parlament"}
 ]
 
+rows = []
+
+
 # ---
 # jQuery document ready.
 # ---
 $ ->
+
   # create a new Bubbles chart
   plot = Bubbles()
 
@@ -456,6 +464,47 @@ $ ->
   # set the book title from the text name
   d3.select("#book-title").html(text.name)
 
+  word = $('#word')
+  word.keydown (e) ->
+    if (e.keyCode == 13)
+      plot.update()
+
+      #plot = Bubbles()
+      #d3.csv("data/#{text.file}", (data) ->
+      #  display(data)
+      #)
+
+      #last = rows[rows.length - 1]
+      #word =
+      #  count: 20
+      #  dx: last.dx
+      #  dy: last.dy
+      #  forceR: last.forceR
+      #  index: rows.length
+      #  name: this.value
+      #  px: last.px
+      #  py: last.py
+      #  weight: 0
+      #  x: last.x
+      #  y: last.y
+      #rows.push word
+      #console.log rows[rows.length - 2]
+      #console.log rows[rows.length - 1]
+      #this.value = ""
+      #rows = [{name: 'hello', count: 20}]
+      #plot.data = []
+      #display(rows)
+      # plotData("#vis", [], plot)
+
+
+  #$('#word').keydown = (e) ->
+  #  alert "hello"
+  #  return ""
+
   # load our data
-  d3.csv("data/#{text.file}", display)
+  # d3.csv("data/#{text.file}", display)
+  d3.csv("data/#{text.file}", (data) ->
+    rows = data
+    display(rows)
+  )
 
