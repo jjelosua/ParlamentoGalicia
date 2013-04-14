@@ -23,4 +23,8 @@ public class JobCommon {
         return row.getValue(Bytes.toBytes(prefix), Bytes.toBytes(qualifier));			
 	}	
 	
+	public static String toKey(Integer season, String word) {
+		return season.toString() + "|" + word;
+	}
+
 }

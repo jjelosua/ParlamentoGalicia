@@ -20,7 +20,7 @@ import org.civio.galparl.jobs.WordIndexJob;
  */
 public class Main {
 
-	private static final String DATA_DIR = "data";
+	private static final String DATA_DIR = "data/lexislaturas";
 	private static final String DEFAULT_JOB = "--word-count-hbase";
 
 	private static final Map<String, JobCommand> jobCommands = new HashMap<String, JobCommand>() {
@@ -69,6 +69,8 @@ public class Main {
 			add(new Attribute("integer", Record.SEASON));		
 			add(new Attribute("long", Record.DATE));		
 			add(new Attribute("string", Record.PERSON));		
+			add(new Attribute("string", Record.FULLNAME));		
+			add(new Attribute("string", Record.HONORS));		
 			add(new Attribute("string", Record.BODY));		
 		}};		
 		exporter.exportTable("parlament-entries", attributes);

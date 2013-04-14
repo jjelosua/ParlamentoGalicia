@@ -46,16 +46,19 @@ public class WordCountJob extends Configured implements Tool {
 				Context context) throws IOException, InterruptedException {
 
 			String body = Bytes
-					.toString(JobCommon.getColumnFamily(row, Record.BODY));
+					.toString(JobCommon.getColumnFamily(row, Record.BODY));			
+			Integer season = Bytes.toInt(JobCommon.getColumnFamily(row,
+					Record.SEASON));
 
 			StringTokenizer tokenizer = new StringTokenizer(body);
 			while (tokenizer.hasMoreTokens()) {
 				String token = JobCommon.removeSpecialChars(tokenizer
 						.nextToken());
-				word.set(token);
+				word.set(JobCommon.toKey(season, token));
 				context.write(word, ONE);
 			}
 		}
+		
 	}
 
 	public static class Reduce extends

@@ -52,7 +52,8 @@ public class Importer {
 		
 	public void importAll(String dir) {
 		try {
-			HTable table = hbase.getOrCreateTable(TABLE_NAME, Record.NUM_ID, Record.SEASON, Record.DATE, Record.PERSON, Record.BODY);
+			HTable table = hbase.getOrCreateTable(TABLE_NAME, Record.NUM_ID, Record.SEASON, Record.DATE, 
+					Record.PERSON, Record.FULLNAME, Record.HONORS, Record.BODY);
 
 			Collection<File> files = FileUtils.listFiles(new File(dir),
 					TrueFileFilter.TRUE, TrueFileFilter.TRUE);
@@ -88,7 +89,10 @@ public class Importer {
 	            hbase.insert(table, record.getId(), Record.NUM_ID, "", record.getNumId());
 				hbase.insert(table, record.getId(), Record.SEASON, "", record.getSeason());
 	            hbase.insert(table, record.getId(), Arrays.asList(Record.PERSON, "", record.getPerson()));
+	            hbase.insert(table, record.getId(), Arrays.asList(Record.FULLNAME, "", record.getFullName()));
+	            hbase.insert(table, record.getId(), Arrays.asList(Record.HONORS, "", record.getHonors()));
 	            hbase.insert(table, record.getId(), Record.DATE, "", record.getTimestamp());
+	            hbase.insert(table, record.getId(), Arrays.asList(Record.BODY, "", body));	            
 	            hbase.insert(table, record.getId(), Arrays.asList(Record.BODY, "", body));	            
 	            imported++;
 			} catch (IOException e) {

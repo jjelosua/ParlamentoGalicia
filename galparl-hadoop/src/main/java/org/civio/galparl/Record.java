@@ -2,12 +2,15 @@ package org.civio.galparl;
 
 import static org.apache.commons.lang.StringUtils.trim;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -24,13 +27,17 @@ public class Record {
 	public static final String NUM_ID = "numid";
 	public static final String DATE = "date";
 	public static final String PERSON = "person";
+	public static final String FULLNAME = "fullname";
+	public static final String HONORS = "honors";
 	public static final String BODY = "body";
 	
 	private String id;
 	private int numid;
 	private int season;
 	private Date date;
-	private String person;
+	private String rawName;
+	private String fullName;
+	private String honors;
 	private String body;
 
 	private static final Map<String, Integer> months =  new TreeMap<String, Integer>() {{
@@ -59,23 +66,72 @@ public class Record {
 		String[] parts = firstLine.split(";");
 		Integer season = Integer.valueOf(trim(parts[0]));
 		Date date = parseDate(trim(parts[1]));
-		String person = trim(parts[2]);
+		String rawName = trim(parts[2]);
 		
 		content.remove(0);
 		String body = trim(StringUtils.join(content, "\n"));
 		
-		return new Record(season, date, person, body);
+		return new Record(season, date, rawName, body);
 	}
 	
-	public Record(Integer season, Date date, String person, String body) {
+	public Record(Integer season, Date date, String rawName, String body) {
 		id = UUID.randomUUID().toString();
 		this.season = season;
 		this.numid = nextId();
 		this.date = date;
-		this.person = person;
+		this.rawName = rawName;
+		this.fullName = getFullName(rawName);
+		this.honors = getHonors(rawName);
+
 		this.body = body;
 	}
+	
+	private String getHonors(String str) {
+		str = str.replaceAll("O señor|A señora", "");
+		int pos = str.indexOf("(");
+		if (pos != -1) {
+			str = str.substring(0, str.indexOf("("));
+			return str.trim();
+		}
+		return "";
+	}
+	
+	private String getFullName(String str) {
+		String regex = "\\((.*?)\\)$";
+		List<String> result = evaluate(regex, str);
+		if (result.isEmpty()) {
+			str = str.replaceAll("O señor|A señora", "").trim();
+			return capitalizeWords(str);
+		} else {
+			return result.get(0);	
+		}
+	}
 
+	private String capitalizeWords(String str) {
+		List<String> result = new ArrayList<String>();
+		String[] parts = str.split(" ");
+		for (String each: parts) {
+			result.add(capitalize(each));
+		}
+		return StringUtils.join(result, " ");
+	}
+
+	private String capitalize(String str) {
+		return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
+	}
+	
+	public List<String> evaluate(String regex, String line) {
+		List<String> result = new ArrayList<String>();
+		Pattern pattern = Pattern.compile(regex);
+
+		int count = 1;
+		Matcher matcher = pattern.matcher(line);
+		while (matcher.find()) {
+			result.add(matcher.group(count++));
+		}
+		return result;
+	}
+	
 	private int nextId() {
 		return ++seqNumber;
 	}
@@ -109,9 +165,17 @@ public class Record {
 	}
 
 	public String getPerson() {
-		return person;
+		return rawName;
 	}
 
+	public String getFullName() {
+		return fullName;
+	}
+
+	public String getHonors() {
+		return honors;
+	}
+	
 	public String getBody() {
 		return body;
 	}
@@ -123,7 +187,7 @@ public class Record {
 	@Override
 	public String toString() {
 		return "Record [season=" + season + ", date=" + date + ", person="
-				+ person + ", body=" + body + "]";
+				+ rawName + ", body=" + body + "]";
 	}
 
 }

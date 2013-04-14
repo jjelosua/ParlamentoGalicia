@@ -52,12 +52,14 @@ public class WordIndexJob extends Configured implements Tool {
 					.toString(JobCommon.getColumnFamily(row, Record.BODY));
 			int numId = Bytes.toInt(JobCommon.getColumnFamily(row,
 					Record.NUM_ID));
-
+			Integer season = Bytes.toInt(JobCommon.getColumnFamily(row,
+					Record.SEASON));
+			
 			StringTokenizer tokenizer = new StringTokenizer(body);
 			while (tokenizer.hasMoreTokens()) {
 				String token = JobCommon.removeSpecialChars(tokenizer
 						.nextToken());
-				word.set(token);
+				word.set(JobCommon.toKey(season, token));
 				context.write(word, new Text(String.valueOf(numId)));
 			}
 
