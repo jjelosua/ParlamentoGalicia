@@ -2,7 +2,7 @@
 
 my $threshold = 10;
 
-my $filename = $ARGV[0] || die("word-counts-to-sql <filename>");
+my $filename = $ARGV[0] || die("word-index-to-sql <filename>");
 
 my $content = do {
     local $/ = undef;
@@ -11,9 +11,10 @@ my $content = do {
 };
 
 foreach my $line (split("\n", $content)) {
-    my($season_word, $count) = split("\t", $line);
+    my($season_word, $index) = split("\t", $line);
     my($season, $word) = split("\\|", $season_word);
+    my $count = split(",", $index);
     if ($count >= $threshold) {
-        print "INSERT INTO word_count(season, word, count) VALUES($season, '$word', $count);\n";
+        print "INSERT INTO word_index(season, word, indice) VALUES($season, '$word', '$index');\n";
     }
 }
